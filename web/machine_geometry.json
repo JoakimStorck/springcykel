@@ -1,0 +1,537 @@
+{
+  "frame": {
+    "nodes": {
+      "A_front_left": [
+        50.0,
+        91.83,
+        -5.0
+      ],
+      "A_front_right": [
+        50.0,
+        91.83,
+        5.0
+      ],
+      "A_rear_left": [
+        0.0,
+        91.83,
+        -5.0
+      ],
+      "A_rear_right": [
+        0.0,
+        91.83,
+        5.0
+      ],
+      "P_left": [
+        0.0,
+        50.0,
+        -5.0
+      ],
+      "P_right": [
+        0.0,
+        50.0,
+        5.0
+      ],
+      "M_left": [
+        44.0,
+        62.015,
+        -5.0
+      ],
+      "M_right": [
+        44.0,
+        62.015,
+        5.0
+      ],
+      "Q": [
+        0.0,
+        113.0,
+        0.0
+      ],
+      "N": [
+        50.0,
+        108.83,
+        0.0
+      ],
+      "H": [
+        50.0,
+        124.0,
+        0.0
+      ]
+    },
+    "links": [
+      [
+        "P_left",
+        "A_rear_left"
+      ],
+      [
+        "P_right",
+        "A_rear_right"
+      ],
+      [
+        "A_rear_left",
+        "A_front_left"
+      ],
+      [
+        "A_rear_right",
+        "A_front_right"
+      ],
+      [
+        "P_left",
+        "M_left"
+      ],
+      [
+        "P_right",
+        "M_right"
+      ],
+      [
+        "A_front_left",
+        "M_left"
+      ],
+      [
+        "A_front_right",
+        "M_right"
+      ],
+      [
+        "A_front_left",
+        "A_front_right"
+      ],
+      [
+        "A_rear_left",
+        "A_rear_right"
+      ],
+      [
+        "P_left",
+        "P_right"
+      ],
+      [
+        "A_front_left",
+        "N"
+      ],
+      [
+        "A_front_right",
+        "N"
+      ],
+      [
+        "N",
+        "H"
+      ]
+    ],
+    "tube_radius_cm": 1.2,
+    "side_z_cm": 5.0
+  },
+  "axles": {
+    "pedal": {
+      "center": [
+        0.0,
+        50.0
+      ],
+      "drev_left_z": -3.0,
+      "drev_right_z": 3.0,
+      "drev_r": 4.0
+    },
+    "rear": {
+      "center": [
+        0.0,
+        91.83
+      ],
+      "drev_left_z": -3.0,
+      "drev_right_z": null,
+      "drev_r": 10.0
+    },
+    "front": {
+      "center": [
+        50.0,
+        91.83
+      ],
+      "drev_left_z": null,
+      "drev_right_z": 3.0,
+      "drev_r": 10.0
+    }
+  },
+  "drivelines_z": {
+    "lagerhus_half": 2.0,
+    "drev_z": 3.0,
+    "vevarm_anchor_z": 5.0,
+    "outer_z": 15.0,
+    "pedal_axle_outer_z": 5.0
+  },
+  "pedal": {
+    "crank_radius_cm": 17.0,
+    "arm_width_cm": 2.0,
+    "arm_thickness_z_cm": 2.0,
+    "plate_size_cm": [
+      6.0,
+      2.0,
+      10.0
+    ],
+    "plate_z_cm": 10.0
+  },
+  "leg": {
+    "constants": {
+      "AC": 15.0,
+      "CD": 50.0,
+      "BD": 41.5,
+      "DE": 55.8,
+      "BE": 40.1,
+      "CF": 61.9,
+      "BF": 39.3,
+      "EG": 39.4,
+      "FG": 36.7,
+      "FH": 49.0,
+      "GH": 65.7
+    },
+    "B_local": [
+      38.0,
+      7.8
+    ],
+    "tube_radius_cm": 0.8,
+    "z_offset_cm": 10.0,
+    "links_z1": [
+      [
+        "A",
+        "C"
+      ],
+      [
+        "C",
+        "D"
+      ],
+      [
+        "B",
+        "D"
+      ],
+      [
+        "D",
+        "E"
+      ],
+      [
+        "B",
+        "E"
+      ],
+      [
+        "C",
+        "F"
+      ],
+      [
+        "B",
+        "F"
+      ],
+      [
+        "E",
+        "G"
+      ],
+      [
+        "F",
+        "G"
+      ],
+      [
+        "F",
+        "H"
+      ],
+      [
+        "G",
+        "H"
+      ]
+    ],
+    "links_z2": [
+      [
+        "B2",
+        "E2"
+      ],
+      [
+        "B2",
+        "F2"
+      ],
+      [
+        "E2",
+        "G2"
+      ],
+      [
+        "F2",
+        "G2"
+      ]
+    ],
+    "links_cross": [
+      [
+        "B",
+        "B2"
+      ],
+      [
+        "E",
+        "E2"
+      ],
+      [
+        "F",
+        "F2"
+      ],
+      [
+        "G",
+        "G2"
+      ]
+    ],
+    "links_apex": [
+      [
+        "D",
+        "B2"
+      ],
+      [
+        "D",
+        "E2"
+      ],
+      [
+        "H",
+        "F2"
+      ],
+      [
+        "H",
+        "G2"
+      ]
+    ]
+  },
+  "legs": [
+    {
+      "label": "front_left",
+      "A_world": [
+        50.0,
+        91.83
+      ],
+      "B_world": [
+        38.0,
+        7.8
+      ],
+      "phase_offset_deg": 0.0,
+      "yaw_deg": 0.0,
+      "reverse": true,
+      "z": -15.0
+    },
+    {
+      "label": "front_right",
+      "A_world": [
+        50.0,
+        91.83
+      ],
+      "B_world": [
+        38.0,
+        7.8
+      ],
+      "phase_offset_deg": 180.0,
+      "yaw_deg": 0.0,
+      "reverse": true,
+      "z": 15.0
+    },
+    {
+      "label": "rear_left",
+      "A_world": [
+        0.0,
+        91.83
+      ],
+      "B_world": [
+        38.0,
+        7.8
+      ],
+      "phase_offset_deg": 180.0,
+      "yaw_deg": 180.0,
+      "reverse": false,
+      "z": -15.0
+    },
+    {
+      "label": "rear_right",
+      "A_world": [
+        0.0,
+        91.83
+      ],
+      "B_world": [
+        38.0,
+        7.8
+      ],
+      "phase_offset_deg": 360.0,
+      "yaw_deg": 180.0,
+      "reverse": false,
+      "z": 15.0
+    }
+  ],
+  "steering": {
+    "AB_baseline_cm": 38.79226727068166,
+    "AB_max_offset_cm": 4.0,
+    "PB_rear_cm": 51.01,
+    "MB_front_cm": 49.2,
+    "side_z_cm": 5.0,
+    "supports": [
+      {
+        "label": "rear_left",
+        "pivot_name": "P_left",
+        "pivot_xy": [
+          0.0,
+          50.0
+        ],
+        "A_xy": [
+          0.0,
+          91.83
+        ],
+        "B_baseline_xy": [
+          -38.0,
+          84.03
+        ],
+        "support_length_cm": 51.01,
+        "side": "left",
+        "position": "rear",
+        "z": -5.0
+      },
+      {
+        "label": "rear_right",
+        "pivot_name": "P_right",
+        "pivot_xy": [
+          0.0,
+          50.0
+        ],
+        "A_xy": [
+          0.0,
+          91.83
+        ],
+        "B_baseline_xy": [
+          -38.0,
+          84.03
+        ],
+        "support_length_cm": 51.01,
+        "side": "right",
+        "position": "rear",
+        "z": 5.0
+      },
+      {
+        "label": "front_left",
+        "pivot_name": "M_left",
+        "pivot_xy": [
+          44.0,
+          62.015
+        ],
+        "A_xy": [
+          50.0,
+          91.83
+        ],
+        "B_baseline_xy": [
+          88.0,
+          84.03
+        ],
+        "support_length_cm": 49.2,
+        "side": "left",
+        "position": "front",
+        "z": -5.0
+      },
+      {
+        "label": "front_right",
+        "pivot_name": "M_right",
+        "pivot_xy": [
+          44.0,
+          62.015
+        ],
+        "A_xy": [
+          50.0,
+          91.83
+        ],
+        "B_baseline_xy": [
+          88.0,
+          84.03
+        ],
+        "support_length_cm": 49.2,
+        "side": "right",
+        "position": "front",
+        "z": 5.0
+      }
+    ],
+    "steer_range": [
+      -1.0,
+      1.0
+    ],
+    "steer_default": 0.0
+  },
+  "saddle": {
+    "x_rear": -15.0,
+    "x_front": 30.0,
+    "top_y": 113.0,
+    "thickness": 7.0,
+    "width_rear": 12.0,
+    "width_front": 8.0,
+    "concavity": 1.5,
+    "sit_x_cm": 25.0,
+    "back_offset_cm": 11.0,
+    "dip_sigma_cm": 8.0,
+    "front_rise_slope": 0.1,
+    "crank_clearance": {
+      "center_xy": [
+        0.0,
+        91.83
+      ],
+      "radius_cm": 15.0,
+      "margin_cm": 3.0
+    },
+    "height_range_cm": [
+      106.0,
+      140.0
+    ]
+  },
+  "handlebar": {
+    "center": [
+      50.0,
+      124.0
+    ],
+    "half_width": 20.0,
+    "tube_radius_cm": 1.0,
+    "grip_radius_cm": 1.8
+  },
+  "rider": {
+    "height": 194,
+    "saddle_xy": [
+      0.0,
+      113.0
+    ],
+    "handlebar_xy": [
+      35.0,
+      110.0
+    ],
+    "pedal_center_xy": [
+      0.0,
+      45.0
+    ],
+    "pedal_radius": 17.0,
+    "foot_track_z": 10.0,
+    "hand_track_z": 20.0,
+    "hip_width": 35,
+    "shoulder_width": 45,
+    "torso_angle_deg": 10.0,
+    "proportions": {
+      "sitting_height": 0.52,
+      "torso": 0.3,
+      "head": 0.13,
+      "thigh": 0.25,
+      "shin": 0.25,
+      "upper_arm": 0.19,
+      "forearm": 0.15
+    },
+    "height_range_cm": [
+      140,
+      210
+    ],
+    "default_height_cm": 194,
+    "default_gender": "male"
+  },
+  "mechanics": {
+    "step_length_cm": 67.90823317615022,
+    "gear_ratio": 2.5,
+    "rpm_range": [
+      10,
+      120
+    ],
+    "default_rpm": 10
+  },
+  "ergonomy": {
+    "leg_length_ratio": 0.465,
+    "leg_stretch_target": 0.95,
+    "pedal_top_offset_cm": 1.0,
+    "foot_half_height_ratio": 0.02,
+    "rider_x_min_cm": -15.0,
+    "rider_x_max_cm": 35.0,
+    "hand_above_handlebar_cm": 3.0,
+    "torso_lean_deg": 25.0
+  },
+  "ground_y": 0.0,
+  "wheelbase": 50.0,
+  "track_width": 30
+}

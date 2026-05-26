@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>Springcykel — 3D-visualisering</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #ddd; font-family: sans-serif; }
+  #info {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(255,255,255,0.85); padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 280px;
+  }
+  #info h1 { font-size: 16px; margin: 0 0 6px 0; }
+  #info .controls { margin-top: 8px; font-size: 12px; color: #555; }
+  #info label { display: block; margin-top: 6px; }
+  #theta-value { font-weight: bold; color: #1976D2; }
+  #theta-slider { width: 100%; }
+</style>
+</head>
+<body>
+
+<div id="info">
+  <h1>Springcykel — 3D</h1>
+  <div>Wheelbase 50 cm · spårvidd 30 cm</div>
+  <div class="controls">
+    Vrid: vänster mus<br>
+    Panorera: höger mus<br>
+    Zooma: scroll
+  </div>
+  <label>Trampvinkel: <span id="theta-value">0°</span></label>
+  <input type="range" id="theta-slider" min="0" max="360" value="0">
+  <label><input type="checkbox" id="auto-rotate"> Animera rörelsen</label>
+  <label>Trampfrekvens: <span id="rpm-value">10</span> rpm</label>
+  <input type="range" id="rpm-slider" min="10" max="120" value="10">
+  <div style="margin-top: 4px; font-size: 0.95em;">
+    Hastighet: <strong><span id="speed-value">1.0</span> km/h</strong>
+  </div>
+  <label><input type="checkbox" id="show-rider" checked> Visa förare</label>
+  <label>Förare:
+    <select id="gender-select">
+      <option value="male">Man</option>
+      <option value="female">Kvinna</option>
+    </select>
+  </label>
+  <label>Längd: <span id="height-value">194</span> cm</label>
+  <input type="range" id="height-slider" min="140" max="210" value="194">
+  <label>Sadelhöjd: <span id="saddle-value">113</span> cm</label>
+  <input type="range" id="saddle-slider" min="106" max="140" value="119">
+  <label>Styrutslag: <span id="steer-value">0</span></label>
+  <input type="range" id="steer-slider" min="-100" max="100" value="0" step="1">
+  <div id="steer-info" style="margin-top: 4px; font-size: 11px; color: #666;">AB-offset: 0.0 cm · svängradie: ∞</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

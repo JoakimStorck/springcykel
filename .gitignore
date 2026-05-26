@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Genererade artefakter (regenereras från Python-källor)
+# Notera: web/machine_geometry.json committas eftersom den behövs för
+# att webdelen ska fungera direkt efter clone utan Python-toolchain.
+docs/komponentlista.txt
+docs/komponentlista.csv
+docs/stl/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Lokal utveckling
+*.log
+node_modules/

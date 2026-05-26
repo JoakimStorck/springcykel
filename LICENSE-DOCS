@@ -1,0 +1,19 @@
+The documentation, design files, and whitepaper in this repository are
+licensed under the Creative Commons Attribution-ShareAlike 4.0 International
+License (CC BY-SA 4.0).
+
+To view a copy of this license, visit:
+  https://creativecommons.org/licenses/by-sa/4.0/
+
+Copyright (c) 2026 Joakim Storck
+
+Files covered by this license include but are not limited to:
+
+  docs/whitepaper.md
+  web/machine_geometry.json
+  docs/komponentlista.{txt,csv}
+  docs/stl/*.stl
+  README.md
+
+Code files (*.py, *.js, *.html) are covered by the MIT license — see
+LICENSE-CODE.

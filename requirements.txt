@@ -1,0 +1,17 @@
+# Springcykel — Python-beroenden
+#
+# Installera med:
+#   pip install -r requirements.txt
+#
+# Eller i en virtuell miljö (rekommenderas):
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   pip install -r requirements.txt
+
+# Numerisk kärna — används av jansen.py, machine.py, machine3d.py,
+# export_geometry.py och komponentlista.py
+numpy>=1.20
+
+# STL-export — bara nödvändig om du vill generera 3D-print-filer
+# via python/export_stl.py. Modulen heter 'stl' men paketet är 'numpy-stl'.
+numpy-stl>=2.16
