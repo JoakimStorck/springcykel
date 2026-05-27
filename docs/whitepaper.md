@@ -4,7 +4,7 @@
 
 Designdokument och teknisk specifikation
 
-*Version 2.0 — Maj 2026*
+*Version 3.0 — 27 maj 2026*
 
 # Sammanfattning
 
@@ -27,9 +27,11 @@ Det som skiljer Springcykeln från tidigare ridbara Jansen-maskiner:
 - Fyra fysiskt identiska ben (mot tidigare maskiners ofta asymmetriska sex- eller åttabens-konfigurationer)
 - Två separata vevpartier (fram/bak) i trav (180° fasförskjutning), vilket ger ett naturligt fyrbent gångmönster
 - 3D-fackverkskonstruktion av benen — varje ben är ett tredimensionellt fackverk snarare än en plan länkmekanism, för sidostabilitet vid kurvkörning
+- Triangelstöd och teleskop ankrar mitt på benets B-axel (z=±10 cm), vilket eliminerar vridmoment vid B-leden
 - Styrning via asymmetrisk kammekanism som förlänger AB-länken på inre sidan i en sväng, vilket ger differentiell steglängd
+- Styret roterar mekaniskt med styrutslag — upp till ±60° vid maximalt slag — och föraren följer med via koordinerad rörelse av armar och torso
 - Ergonomisk sittposition beräknad så att benens vinklar vid pedalens lägsta läge är cirka 95 % av maxutsträckning — anpassat för förarlängd
-- Komplett kinematisk simuleringsmodell med interaktiv 3D-visualisering och stöd för manuskriptbaserad videoinspelning
+- Komplett kinematisk simuleringsmodell med interaktiv 3D-visualisering, inklusive 3D-IK för föraren med abduktion från höften, samt rörlig mark som visar både framdrift och sväng
 
 # Mekanisk design
 
@@ -73,40 +75,90 @@ Totalt 23 stänger per ben istället för 11, alltså 92 benstänger för hela m
 
 Konstruktionen påminner i form om en fackverkbro där två parallella plan binds samman med tvärbalkar och diagonaler. För benens dimensioneringsproblem är fördelarna betydande: vridstyvhet kring benets längdaxel, böjstyvhet i z-led, och redundans om en stång skulle skadas.
 
-## Ram och bensystem
+## Ram
 
-Ramen är konstruerad som ett rörstaglerverk med stål- eller aluminiumrör. Centrala dimensioner:
+Ramen är en symmetrisk konstruktion av rörstänger med sidoramar vid z=±10 cm — alltså **mitt på** benets B-axel som spänner från B1 vid z=±15 till B2 vid z=±5. Att placera triangelstödet och styrteleskopet i samma plan som B-axelns mittpunkt eliminerar det vridmoment som annars skulle uppstå om kraften togs upp asymmetriskt längs axelns längd.
 
-| Mått | Värde (cm) |
-| --- | --- |
-| Hjulbas (fram–bak vevcentrum) | 50 |
-| Spårvidd (mellan vänster och höger ben) | 30 |
-| Höjd: mark till vevcentrum | 91.83 |
-| Höjd: mark till sadel (justerbar) | 106–140 |
-| Höjd: mark till styre | 124 |
+### Ramnoder
 
-Två separata vevpartier driver fram- respektive bakbenen. Vänster och höger ben på samma vevparti är 180° fasförskjutna. Fram- och bakbenparet är också 180° fasförskjutna mot varandra — vilket ger ett trav-mönster: när vänster fram-fot och höger bak-fot är på marken, är höger fram-fot och vänster bak-fot i luften.
+Ramen består av följande noder:
 
-## Drivlina
+| Nod | x (cm) | y (cm) | z (cm) |
+| --- | --- | --- | --- |
+| A_front_left | 50 | 91.83 | -10 |
+| A_front_right | 50 | 91.83 | +10 |
+| A_front (central) | 50 | 91.83 | 0 |
+| A_rear_left | 0 | 91.83 | -10 |
+| A_rear_right | 0 | 91.83 | +10 |
+| A_rear (central) | 0 | 91.83 | 0 |
+| P_left | 0 | 50 | -10 |
+| P_right | 0 | 50 | +10 |
+| M_left | 44 | 62.0 | -10 |
+| M_right | 44 | 62.0 | +10 |
+| Q (sadelstolpens topp) | 0 | 113 | 0 |
+| N (styraxelns fästpunkt) | 50 | 108.83 | 0 |
+| H (styrets centrum) | 50 | 124 | 0 |
 
-Föraren trampar på pedaler som sitter på en separat pedalvevaxel. Två kedjor överför rotation från pedalvevaxeln till fram- respektive bakvevaxeln. Drevet på pedalvevaxeln är 4 cm i radie; drevet på bens-vevaxlarna är 10 cm — vilket ger en utväxling 1:2.5.
+A-noderna ligger vid vevaxlarnas centrum. P är pedalvevaxelns mittpunkt. M är frambenens kam/triangelstödets pivotpunkt. Q, N och H är centrala (z=0) eftersom de hör till sadel och styre som ligger på maskinens mittlinje.
 
-Den laterala (z-axiella) ordningen från ramcentrum och utåt på varje sida:
+### Ramlänkar
 
-| z (cm) | Komponent |
-| --- | --- |
-| 0 – ±2 | Lagerhus där axeln möter ramen |
-| ±2 – ±3 | Drev för kedjedrift (1 cm tjockt) |
-| ±3 – ±5 | Vevarm fastsatt på drev/axel (2 cm tjock) |
-| ±5 | B2-leden (sekundärplanet i 3D-fackverket) |
-| ±5 – ±15 | Pedaltapp + pedalplatta (plattan trädd på tappen) |
-| ±15 | B1-leden (Jansens ursprungliga B-fästpunkt) |
+Ramen är **y-formad** sett uppifrån: centrala noderna A_front och A_rear (vid z=0) tar upp diagonalstagen från P och M på båda sidor, vilket ger en strukturellt enkel men styv konstruktion.
 
-Pedalvevaxeln slutar vid ±5 (vid vevarmens utsida), medan fram- och bakvevaxlarna fortsätter ut till ±15 där benens C-punkt sitter på respektive vevarm. B-axeln på ramen sträcker sig från ramcentrum och passerar genom både B2-leden (vid z = ±5) och B1-leden (vid z = ±15), så att en enda axel tar upp sidobelastning från båda lederna i 3D-fackverket.
+Per sida finns två länkar (vertikalt och snett framåt):
+
+- A_rear ↔ P (vertikal stötta från bakvevaxel till pedalvevaxel)
+- M ↔ A_front (snett framåt från frambenens M-pivot till framvevaxel)
+
+Centrala stag (från sidonoderna till central nod):
+
+- A_rear ↔ A_front (central balk längs maskinens mittlinje)
+- A_rear ↔ M_left och A_rear ↔ M_right
+- P_left ↔ A_front och P_right ↔ A_front
+
+Tvärbalkar mellan sidorna, en per nod:
+
+- A_front_left ↔ A_front_right
+- A_rear_left ↔ A_rear_right
+- P_left ↔ P_right
+- M_left ↔ M_right
+
+Styre och sadel:
+
+- A_front_left ↔ N och A_front_right ↔ N (styraxelns nedre fästpunkt)
+- N ↔ H (styrstolpen — roterar med styret, se nedan)
+
+Sadelstolpen (från A_rear-tvärbalkens mitt upp till sadeln) byggs dynamiskt eftersom dess längd beror på vald sadelhöjd.
+
+## Vevaxlar och drivlina
+
+Tre vevaxlar lagras i sidoramen (z=±10):
+
+- **Pedalvevaxeln** vid (0, 50). Lagring vid z=±10. Vevarmen sitter *utanpå* sidoramen vid z=±12, med 2 cm tjocklek. Pedaltappen sticker ut 10 cm i z-led från vevarmen, alltså från z=±12 till z=±22. Pedalplattans centrum ligger vid z=±17 där föraren har sin fot.
+- **Bakvevaxeln** vid (0, 91.83). Sträcker sig till z=±15 där benets C-punkt ankrar på vevarmen.
+- **Framvevaxeln** vid (50, 91.83). Samma princip som bakvevaxeln.
+
+Pedalvevaxelns dimensionering — vevarm utanpå ramen, tapp 10 cm — ger föraren fri svängrum för foten utan att benet är i vägen. Att lagringen sitter i sidoramen och vevarmen utanpå är samma princip som på en konventionell cykel.
+
+Drevet på pedalvevaxeln är 4 cm i radie; drevet på fram- och bakvevaxlarna är 10 cm — vilket ger en utväxling 1:2.5 från pedalen till benen. Två kedjor överför rotation från pedalvevaxeln till respektive bens-vevaxel.
 
 ## Styrning
 
-Styrning sker via *differentiell steglängd*: inre sidan av maskinen tar kortare steg än yttre sidan i en sväng, vilket vrider maskinen kring en centroid mellan benen. Mekanismen utnyttjar att Jansens benkinematik är känslig för positionen av B-leden — en förlängning av AB-länken (avståndet från vevaxel till benets B-fästpunkt) på ena sidan av maskinen ger där kortare steg, medan motsatta sidan förblir oförändrad.
+Styrning sker via *differentiell steglängd*: inre sidan av maskinen tar kortare steg än yttre sidan i en sväng, vilket vrider maskinen kring ett centrum mellan benen. Mekanismen utnyttjar att Jansens benkinematik är känslig för positionen av B-leden — en förlängning av AB-länken (avståndet från vevaxel till benets B-fästpunkt) på ena sidan av maskinen ger där kortare steg, medan motsatta sidan förblir oförändrad.
+
+### Styrvinkel och utslag
+
+Styret kan vridas upp till ±60° från neutralläge. Vinkeln mappas linjärt till AB-förlängning:
+
+| Styrvinkel | AB-offset på inre sida | Steglängd inre | Karaktär |
+| --- | --- | --- | --- |
+| 0° | 0 cm | 67.9 cm | Rakt fram |
+| ±15° | 1 cm | 66.4 cm | Mjuk sväng |
+| ±30° | 2 cm | 64.8 cm | Normal sväng |
+| ±45° | 3 cm | 63.1 cm | Tightare sväng |
+| ±60° | 4 cm | 61.4 cm | Max utslag |
+
+Vid maxutslag är steglängdsasymmetrin 6.5 cm vilket vid 30 cm spårvidd ger en svängradie omkring 3 m. Det är inom körfältsbredd för normal cykelväg.
 
 ### Asymmetrisk justering
 
@@ -122,18 +174,18 @@ Mekanismens arbetsområde är begränsat av Jansens kinematik. Simulering av fot
 | +4 cm | 61.4 cm |  8.6 cm | Designgräns |
 | +7 cm | 56.3 cm | 13.4 cm | Brytpunkt (Jansen kollapsar) |
 
-Förkortning av AB är teoretiskt möjlig men praktiskt obrukbar: mekanismen tappar sin karakteristiska gång redan vid −0.5 cm där fotlyftet växer från 22 till 30 cm, och bryter helt vid omkring −1.3 cm. Designen tillåter därför endast *förlängning* av AB. Yttre sidan i en sväng står kvar vid baseline (offset 0); inre sidan ökar upp till +4 cm.
+Förkortning av AB är teoretiskt möjlig men praktiskt obrukbar: mekanismen tappar sin karakteristiska gång redan vid −0.5 cm. Designen tillåter därför endast *förlängning* av AB. Yttre sidan i en sväng står kvar vid baseline (offset 0); inre sidan ökar upp till +4 cm.
 
 ### Triangelmekanism för B-leden
 
-Direkt translation av B i x-led är mekaniskt komplicerat — B-axeln skulle behöva glida i x-led samtidigt som den bär böjnings- och vridkrafter från benen, vilket kräver kostsamma glidlagringar med stora dimensioner. Lösningen är en *triangelmekanism* där en av sidorna är teleskopisk:
+Direkt translation av B i x-led är mekaniskt komplicerat — B-axeln skulle behöva glida i x-led samtidigt som den bär böjnings- och vridkrafter från benen, vilket kräver kostsamma glidlagringar. Lösningen är en *triangelmekanism* där en av sidorna är teleskopisk:
 
 - **Bakben:** triangeln A_rear—P—B_rear. Sidan A_rear→B_rear teleskoperas längs sin egen axel; sidan P→B_rear behåller fast längd 51.0 cm och har ett gångjärn vid P. När teleskopet förlängs vandrar B_rear i en cirkulär båge kring P.
 - **Framben:** motsvarande triangel A_front—M—B_front. Sidan A_front→B_front teleskoperas; sidan M→B_front behåller fast längd 49.2 cm med gångjärn vid M.
 
-Eftersom B rör sig i en båge (inte rent i x-led) ändras både den horisontella och vertikala komponenten av AB-vektorn med utslaget. Det är inte ett problem för Jansen-kinematiken — modellen hanterar redan båda komponenterna parametriskt.
+Triangelstödet och teleskopet ligger vid z=±10 — alltså mitt på B-axeln som spänner från B1 (z=±15) till B2 (z=±5). Denna symmetriska infästning eliminerar det vridmoment som annars skulle uppstå om kraften togs upp asymmetriskt.
 
-Triangelgeometrin löser belastningsproblemet helt: teleskopet utsätts endast för axiell kraft längs AB, eftersom alla sidolaster tas upp av den fasta P→B-stången (eller M→B-stången för frambenet) via gångjärnet. Inga vridmoment, ingen böjning, ingen glidning vinkelrätt mot teleskopets axel. Mekaniskt är detta en betydligt enklare lösning än ett fritt-bärande glidteleskop.
+Triangelgeometrin löser belastningsproblemet: teleskopet utsätts endast för axiell kraft längs AB, eftersom alla sidolaster tas upp av den fasta P→B-stången (eller M→B-stången för frambenet) via gångjärnet. Inga vridmoment, ingen böjning, ingen glidning vinkelrätt mot teleskopets axel.
 
 ### Kamprofil
 
@@ -145,28 +197,13 @@ Kamprofilen designas asymmetriskt så att kammen bara är aktiv åt ett håll:
 - Vid kamvinkel +α (styrutslag åt kammens aktiva sida): följaren pressas successivt utåt, AB förlängs upp till +4 cm vid maxutslag.
 - Vid kamvinkel −α (motsatt utslag): kammen har en platt sektor — följaren rör sig inte. AB förblir baseline.
 
-Detta gör att varje kam bara aktiverar sin sida i den ena svängriktningen. Vänster sidas kam aktiveras vid vänstersväng; höger sidas vid högersväng. I rakt läge är båda kammarna i vilolägets platta sektor.
-
-Kamprofilens form bestämmer även styrkänslan — om följaren ska röra sig linjärt mot styrvinkeln, eller progressivt (mer utslag krävs nära ändlägena). Detta är ett designval som kan justeras utan att ändra resten av mekanismen.
+Vänster sidas kam aktiveras vid vänstersväng; höger sidas vid högersväng. I rakt läge är båda kammarna i vilolägets platta sektor.
 
 ### Två kamaxlar driver fyra ben
 
 Fram- och bakbenen på samma sida ska justeras tillsammans — annars divergerar deras steglängder och maskinen vrider sig okontrollerbart kring en vertikal axel. En naturlig lösning är att låta en gemensam kamaxel löpa längs ramens sida med två kammar — en vid varje ben. Då har maskinen totalt två kamaxlar (vänster och höger), inte fyra separata kammar.
 
-Styret kopplas till de två kamaxlarna via en länkmekanism som driver dem åt motsatta håll: vid vänstersväng vrids vänster axels kammar in i sin aktiva sektor, höger axels kammar förblir i vilo (och vice versa). Mekanisk länk via stänger och vinkelarmar är robustast; bowdenwires är ett tunnare alternativ men kräver kompensationsfjädrar.
-
-### Prestanda
-
-Vid maximalt styrutslag (+4 cm AB-förlängning på inre sidan):
-
-| Storhet | Värde |
-|---|---|
-| Steglängd yttre sida | 67.9 cm |
-| Steglängd inre sida | 61.4 cm (fram) / 61.7 cm (bak) |
-| Steglängdsasymmetri | 6.5 cm |
-| Svängradie (vid 30 cm spårvidd) | 2.97 m |
-
-Detta är inom körfältsbredd för normal cykelväg och möjliggör vändning i de flesta gatorum.
+Styret kopplas till de två kamaxlarna via en länkmekanism som driver dem åt motsatta håll: vid vänstersväng vrids vänster axels kammar in i sin aktiva sektor, höger axels kammar förblir i vilo (och vice versa).
 
 ### Biverkning: fotlyft på inre sida
 
@@ -177,22 +214,7 @@ En konsekvens av Jansens kinematik är att fotbanan inte bara *krymper* horisont
 | Framben | 100.0 cm | 8.2 cm |
 | Bakben | 96.9 cm | 5.0 cm |
 
-Frambenet lyfter mer än bakbenet eftersom de har olika triangelgeometri: bakbenets P→B-stöd är längre (51 cm) och har en mer gynnsam vinkel mot A→B, vilket gör att förlängning av AB ger en flackare båge för B. Frambenet har M→B (49.2 cm) med en mer aggressiv vinkel.
-
-### Markkontakt under sväng
-
-Att fötterna lyfts upp från marken är inte i sig ett problem — det löses av samma rörelse som föraren ändå utför. För balansens skull *måste* föraren luta maskinen inåt i sin sväng, precis som en cyklist gör för att kompensera för centripetalaccelerationen. När maskinen lutar inåt sänks inre sidan och höjs yttre — och inre fötter återställer markkontakt automatiskt.
-
-Vid 4 cm AB-offset kräver fullständig markåterställning ungefär 15° lutning åt yttre sida för frambenet, ~10° för bakbenet. Det är inom samma lutningsintervall som en cyklist använder i en lugn kurva, så det följer naturligt av körningen utan att kräva särskild styrteknik.
-
-Båda sidornas ben bidrar därför till framdriften, om än med olika belastning: yttre sidan tar längre steg och bär mer av maskinens vikt rakt ner i ramens stödriktning, inre sidan tar kortare steg men trycker mot marken i en mer sidoriktad vinkel. Hur kraftfördelningen ser ut i detalj beror på dynamiken — körhastighet, kurvradie och förarens viktfördelning — och låter sig knappast simuleras utan fysisk prototyp.
-
-### Öppna designfrågor
-
-- Exakt placering av kamaxlarna på ramen.
-- Returfjäderns dimensionering — måste övervinna benens normala dragkrafter utan att göra styret tungt.
-- Kopplingsmekanik från styraxeln (N→H) till de två kamaxlarna — bowdenwires med korsad ledning, kuggdrev eller stång och vinkelarm är alla rimliga alternativ.
-- Eventuell aktiv lutningskompensation — t.ex. genom att förskjuta sadelns eller styrets pivotpunkt under sväng.
+För balansens skull måste föraren luta maskinen inåt i sin sväng, precis som en cyklist gör för att kompensera för centripetalaccelerationen. När maskinen lutar inåt sänks inre sidan och inre fötter återställer markkontakt automatiskt. Vid 4 cm AB-offset kräver fullständig markåterställning ungefär 15° lutning för frambenet, ~10° för bakbenet — inom samma lutningsintervall som en cyklist använder i en lugn kurva.
 
 # Ergonomi
 
@@ -210,13 +232,19 @@ Två huvudkriterier styr förarens placering:
 - **Benens utsträckning:** vid pedalens lägsta position ska benet vara utsträckt till 95 % av maxlängden. Detta motsvarar 25–35° knäböj — den ergonomiskt rekommenderade vinkeln för cykling som skyddar knäna från överbelastning samtidigt som det ger god kraftöverföring.
 - **Armarnas position:** överarmen ska vinkla framåt från axeln för att handen ska nå styret naturligt. Bålen lutar 15–30° framåt beroende på proportioner.
 
-## Automatisk anpassning
+## 3D-IK med abduktion från höften
 
-Mjukvarumodellen beräknar automatiskt:
+Eftersom pedaltappen sticker ut till z=±17 — utanför maskinens ramplan — kan föraren inte sitta med benen rakt nedhängande. Lösningen är ergonomiskt vald: föraren abducerar benen lätt från höften, så att låret pekar något snett utåt mot pedalen, knäet hamnar något utåt, och foten landar på pedalplattan.
 
-- Optimal sadelhöjd: föraren placeras vid x=0 (höften rakt över pedalen) med 95 % benutsträckning. Klipps till 106–140 cm-intervallet.
-- Vid sadelhöjd utanför intervallet (för kort eller lång förare) flyttas förarens sittposition framåt eller bakåt på sadeln.
-- Bålvinkel: ökas stegvis från 15° upp till maximalt 70° tills armarna kan nå styret. Långa armar = mindre lutning.
+Vid normal sittposition (höft ungefär 9 cm från mittlinjen, pedalplatta vid 17 cm) blir abduktionsvinkeln cirka 7° — en mild lutning som motsvarar vad cyklister gör när pedalerna är något bredare än höften.
+
+Algoritmen för 3D-IK börjar med fotens önskade världs-position och räknar baklänges:
+
+1. **Abduktionsvinkel** (lateral lutning av låret) från höft till fot i ett vertikalt plan som innehåller båda
+2. **Framåt-vinkel** (höftens roll) i det laterala plan som benet nu pekar mot
+3. **Knäböjning** via lagen om cosinus baserat på 3D-avståndet höft-fot
+
+Detta gör att benets vinklar alltid är geometriskt korrekta för fotens position.
 
 ## Sadelns form
 
@@ -229,6 +257,17 @@ Sadeln är 45 cm lång (x=-15 till x=30 från ramens bakvevaxel). Formen är fas
 - Konkavitet (sadeldipp): 1.5 cm vid sittpunkten
 
 Bakdelens högre position gör att sadeln kröker sig över bakvevaxeln och ger högre sittposition för långa förare som behöver mer benutrymme.
+
+## Styrning och kroppsvridning
+
+När föraren vrider styret följer hela överkroppen med på ett koordinerat sätt:
+
+- **Styret roterar** kring styrstolpens vertikala axel (genom N och H) med upp till ±60°
+- **Händerna följer handtagen** automatiskt eftersom föraren håller i dem (IK-mål för armarna är handtagens nuvarande världs-position)
+- **Armarna anpassar sig** via 3D-IK — vid stora utslag sträcker sig den ena armen ut och den andra böjs in
+- **Torsen vrider sig** proportionellt mot styrvinkeln: bröstkorgen 35 %, magen 10 %, huvudet 15 % — totalt cirka 27° vridning av övre kroppen vid maxutslag
+
+Detta speglar hur en cyklist faktiskt rör sig — det är inte bara armarna som tar utslaget, hela kroppen följer med.
 
 # Prestanda
 
@@ -248,6 +287,14 @@ Vid utväxling 1:2.5 och steglängd 67.91 cm per vevvarv blir framdriftens hasti
 UI-modellens slider tillåter trampfrekvens från 10 till 120 rpm, med default 10 rpm för säker uppstart.
 
 Detta är gång- till joggfart — långsamt i jämförelse med en konventionell cykel, men förväntat för en gångmaskin. Den långsamma hastigheten är delvis en konsekvens av att fötterna måste lyftas och sänkas vid varje steg, vilket är mindre energieffektivt än rullande hjul men ger förmåga att klara ojämn terräng som hjul inte kan.
+
+## Visualiseringsmodell
+
+Modellens 3D-visualisering återger maskinens rörelse genom rummet:
+
+- **Markens rutmönster rör sig** under maskinen — vid rak körning sopar mönstret bakåt med hastighet som motsvarar beräknad framdrift; vid sväng roterar marken runt svängcentrum med vinkelhastighet som motsvarar svängradien.
+- **Styret roterar mekaniskt** med styrutslaget och förarens kropp följer med (se Ergonomi ovan).
+- **Förarens fötter spårar pedalerna** exakt med 3D-IK genom hela trampcykeln.
 
 ## Kraftöverföring och begränsningar
 
@@ -284,7 +331,7 @@ Uppskattad totalvikt (grov estimat):
 - Sadel, styre, mindre komponenter: 2–3 kg
 - Totalt: 42–63 kg
 
-Detta är betydligt tyngre än en cykel (8–15 kg) och något tyngre än version 1.0 (34–51 kg) på grund av 3D-fackverket och styrmekaniken. Vikten ligger lågt (vevarmar och ben), vilket ger god stabilitet. För att hålla nere vikten är aluminium på benen ett intressant alternativ till stål — kostnaden är högre men kan motiveras av den dynamiska viktbesparingen.
+Detta är betydligt tyngre än en cykel (8–15 kg). Vikten ligger lågt (vevarmar och ben), vilket ger god stabilitet. För att hålla nere vikten är aluminium på benen ett intressant alternativ till stål — kostnaden är högre men kan motiveras av den dynamiska viktbesparingen.
 
 # Ekonomi
 
@@ -307,8 +354,6 @@ Uppskattade materialkostnader för en enskild prototyp byggd i Sverige (2026 år
 | Lager, bultar, distanser, småmaterial | 2 000–4 000 |
 | Lack/ytbehandling | 500–1 500 |
 | Summa material | 23 000–48 500 |
-
-Materialkostnaden ökar jämfört med version 1.0 främst på grund av dubbla antalet benstänger (92 mot tidigare 44) och tillkomsten av styrmekanismens specialkomponenter.
 
 ## Arbete och tid
 
@@ -333,25 +378,9 @@ Vid en verkstadstaxa på 750–1 200 SEK/h blir arbetskostnaden 180 000 – 440 
 
 Det är värt att notera att liknande projekt (CARV Walking Bicycle, Panterragaffe) inte sålts kommersiellt utan byggts som enstaka prototyper. Det är inte en produkt med klar massmarknad — det är ett konstprojekt eller ett tekniskt experiment.
 
-# Öppen källkod och spridning
+# Programvara och simuleringsmodell
 
-## Designfilosofi
-
-Projektet följer en lång tradition av öppen delning inom Jansen-relaterade konstruktioner. Theo Jansen själv har valt att inte patentera sin mekanism, och de pedaldrivna varianterna som följt har också varit publika makerprojekt. Springcykeln fortsätter i samma anda.
-
-## Licens
-
-Föreslagna licenser för olika typer av material:
-
-- Källkod (Python, HTML, JavaScript): MIT License
-- Designfiler (STL, JSON, ritningar): CC BY-SA 4.0
-- Dokumentation (whitepaper, instruktioner): CC BY-SA 4.0
-
-Detta tillåter andra att bygga, modifiera och även sälja sina egna versioner, förutsatt att de hänvisar till ursprungsverket och bidrar tillbaka under samma villkor.
-
-## Distribuerade filer
-
-Projektet består av följande huvudfiler, organiserade i tre lager:
+Projektet inkluderar en komplett interaktiv simuleringsmodell som körs i webbläsare. Modellen är uppbyggd i tre lager:
 
 **Python-lagret** (kinematik och dimensioner):
 
@@ -376,30 +405,46 @@ Projektet består av följande huvudfiler, organiserade i tre lager:
 | --- | --- |
 | index.html | Tunn shell med UI-element och import map |
 | js/main.js | Orkestrering — läser JSON och bygger upp scenen |
-| js/setup.js | Scen, kamera, ljus, mark, OrbitControls |
+| js/setup.js | Scen, kamera, ljus, mark (med rörelse), OrbitControls |
 | js/helpers.js | Gemensamma mesh-primitiver |
 | js/frame.js | Ramnoder och dynamisk sadelstång |
 | js/saddle.js | Sadelns 3D-form och topp-funktion |
 | js/driveline.js | Axlar, drev, kedjor, pedalvevar |
 | js/legs.js | Jansen-kinematik och 3D-fackverket |
-| js/handlebar.js | Styret |
-| js/mannequin.js | Artikulerad förar-figur |
+| js/handlebar.js | Styret med rotation, kopplat till styrutslaget |
+| js/steering.js | Styrmekanismens triangelmatematik |
+| js/steering_render.js | Visualisering av triangelstöd och teleskop |
+| js/mannequin.js | Artikulerad förar-figur med 3D-IK för ben och armar |
 | js/rider.js | Placering, IK-mål, automatisk sadelhöjd |
-| js/steering.js | Triangelmekanism för per-ben B-leder |
-| js/steering_render.js | Visualisering av teleskop och stödstänger |
-| js/animation.js | Animationsloop |
+| js/animation.js | Animationsloop med framdrift och markens rotation |
 | js/ui.js | DOM-events och slider-bindning |
 | js/video.js | Manuskriptbaserad MediaRecorder-inspelning |
 
 Arkitekturens grundprincip är att numeriska värden (mått, dimensioner, konstanter) hör hemma i Python-lagret och förmedlas via JSON till JS, medan visuell form, IK-algoritmer och animation lever i JS. Detta ger en enda sanning för varje siffra och underlättar parallell utveckling.
 
+# Öppen källkod och spridning
+
+## Designfilosofi
+
+Projektet följer en lång tradition av öppen delning inom Jansen-relaterade konstruktioner. Theo Jansen själv har valt att inte patentera sin mekanism, och de pedaldrivna varianterna som följt har också varit publika makerprojekt. Springcykeln fortsätter i samma anda.
+
+## Licens
+
+Föreslagna licenser för olika typer av material:
+
+- Källkod (Python, HTML, JavaScript): MIT License
+- Designfiler (STL, JSON, ritningar): CC BY-SA 4.0
+- Dokumentation (whitepaper, instruktioner): CC BY-SA 4.0
+
+Detta tillåter andra att bygga, modifiera och även sälja sina egna versioner, förutsatt att de hänvisar till ursprungsverket och bidrar tillbaka under samma villkor.
+
 # Framtida arbete
 
 Aspekter som ännu inte är fullständigt utvecklade eller verifierade:
 
-- Styrmekanismen är konceptuellt löst och kinematiskt validerad, men inte fysiskt prototypbyggd eller dimensionerad för verkliga belastningar.
+- Styrmekanismens kammar och kamaxlar är konceptuellt löst och kinematiskt validerade, men inte fysiskt prototypbyggda eller dimensionerade för verkliga belastningar.
 - Realistiska kedjor som lindar sig runt dreven (just nu förenklade tangenter i 3D-visualiseringen).
-- Animation av styrning i 3D-modellen — kamrotation, teleskopförlängning, lutningskompensation och resulterande steglängdsasymmetri.
+- Animation av styrmekanismens egenrörelse i 3D — kamrotation, teleskopförlängning, lutningskompensation.
 - Materialval och dimensionering med hänsyn till verklig last och utmattning.
 - Säkerhetsanalys: vad händer vid kedjebrott, plötslig stopp, kullning?
 - Fysisk prototyp i mindre skala (1:5) för validering av kinematik och styrning före full byggnad.
