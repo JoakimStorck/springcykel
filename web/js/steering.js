@@ -121,11 +121,38 @@ export function createSteering(G) {
 
   function getSteer() { return steerValue; }
 
+  /**
+   * Uppskattad svängradie (cm) vid aktuellt styrutslag. Räknas från
+   * steglängds-asymmetrin mellan inre och yttre sida. Returnerar Infinity
+   * vid steer=0 (rak körning).
+   *
+   * Bygger på samma formel som UI:n: R = (trackWidth/2) × (rOuter+rInner) / (rOuter−rInner)
+   * där rOuter/rInner är steglängderna på yttre/inre sidan. Asymmetrin
+   * approximeras linjärt från offset enligt whitepaperns tabell.
+   */
+  function getTurningRadius() {
+    if (Math.abs(steerValue) < 1e-3) return Infinity;
+    const innerLabel = steerValue > 0 ? 'front_left' : 'front_right';
+    const offsetMag = Math.abs(getABOffset(innerLabel));
+    if (offsetMag < 0.05) return Infinity;
+    // Empirisk approximation av steglängds-asymmetri som funktion av offset
+    // (se whitepaper-tabell): 1→1.5, 2→3.1, 3→4.8, 4→6.5 cm
+    const asym = offsetMag * 1.6;
+    const stepOuter = 67.9;
+    const stepInner = stepOuter - asym;
+    if (stepInner <= 0) return Infinity;
+    const ratio = stepOuter / stepInner;
+    // Standard ackermann-ish formel: R relaterar till spårvidd och ratio
+    const trackWidth = 30;   // cm; från konfig — kunde hämtas från G
+    return (trackWidth / 2) * (ratio + 1) / (ratio - 1);
+  }
+
   function onChange(cb) { listeners.push(cb); }
 
   return {
     setSteer,
     getSteer,
+    getTurningRadius,
     getBPosition,
     getABOffset,
     getAllBPositions,

@@ -94,12 +94,14 @@ export function bindUI(ctx) {
   const steerValueEl = document.getElementById('steer-value');
   const steerInfoEl = document.getElementById('steer-info');
   const steering = ctx.steering;
+  const MAX_STEER_DEG = 60;
   if (steerSlider && steering) {
     steerSlider.addEventListener('input', (e) => {
       const v = parseInt(e.target.value) / 100;   // -1 till +1
       steering.setSteer(v);
-      // Uppdatera visning
-      steerValueEl.textContent = v.toFixed(2);
+      const steerDeg = v * MAX_STEER_DEG;
+      // Visa både slidervärde och styrvinkel i grader
+      steerValueEl.textContent = `${v.toFixed(2)} (${steerDeg.toFixed(0)}°)`;
       // Beräkna info-rad: AB-offset för aktiva sidan + uppskattad svängradie
       let activeOffset = 0;
       let activeLabel = '';

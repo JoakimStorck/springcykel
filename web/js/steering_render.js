@@ -43,13 +43,16 @@ export function buildSteeringRender(scene, G, steering) {
     support.castShadow = true;
     scene.add(support);
 
-    // Pivotbollen (fix position)
+    // Pivotbollen (fix position) — använd pivot_z för stödets pivot,
+    // som kan skilja sig från B-nodens z (t.ex. för framben där M sitter
+    // på sidoramens parabel vid annan z än B-nodens ±15)
     const pivotGeom = new THREE.SphereGeometry(1.5, 16, 12);
     const pivotMat = new THREE.MeshStandardMaterial({
       color: PIVOT_NODE_COLOR, roughness: 0.4, metalness: 0.4
     });
     const pivotNode = new THREE.Mesh(pivotGeom, pivotMat);
-    pivotNode.position.set(sup.pivot_xy[0], sup.pivot_xy[1], sup.z);
+    const pivotZ = (sup.pivot_z !== undefined) ? sup.pivot_z : sup.z;
+    pivotNode.position.set(sup.pivot_xy[0], sup.pivot_xy[1], pivotZ);
     pivotNode.castShadow = true;
     scene.add(pivotNode);
 
@@ -84,12 +87,13 @@ export function buildSteeringRender(scene, G, steering) {
       const BWorld = steering.getBPosition(sup.label);
       if (!BWorld) continue;
 
+      const pivotZ = (sup.pivot_z !== undefined) ? sup.pivot_z : sup.z;
       const A = [sup.A_xy[0], sup.A_xy[1], sup.z];
-      const pivot = [sup.pivot_xy[0], sup.pivot_xy[1], sup.z];
+      const pivot = [sup.pivot_xy[0], sup.pivot_xy[1], pivotZ];
 
-      // Teleskopet (A → B)
+      // Teleskopet (A → B) — i benets z-plan
       updateMeshAsCylinder(m.telescope, A, BWorld);
-      // Stödstången (pivot → B)
+      // Stödstången (pivot → B) — kan vara svagt vinklad i z-led för framben
       updateMeshAsCylinder(m.support, pivot, BWorld);
       // B-bollen
       m.bNode.position.set(BWorld[0], BWorld[1], BWorld[2]);

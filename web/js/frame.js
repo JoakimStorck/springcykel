@@ -1,11 +1,14 @@
 // js/frame.js
 // =============================================================================
-// Ramen — 3D-konstruktion med sidoramar vid z=±5 och tvärbalkar.
+// Ramen — 3D-konstruktion med raka sidoramar vid z=±RAM_Z (= ±10).
+//
+// Sidoramen är en triangulerad fyrhörning A_rear—P—M—A_front per sida,
+// med 6 länkar (alla par utom inga, alla diagonaler inkluderade) per sida
+// och 4 tvärbalkar mellan sidorna (en per nod).
 //
 // Sadelstolpen är dynamisk (längd beror på sadelhöjd). Den går från
 // mittpunkten på A_rear-tvärbalken (x=0, y=A_rear.y, z=0) upp till sadelns
-// undersida. För att stolpen ska anslutas till båda sidoramarna ritar vi
-// dessutom korta stöd från A_rear_left/right till stolpens bas.
+// undersida.
 //
 // Triangelstöden för styrmekanismen (P→B och M→B per ben) ritas separat
 // av steering-renderaren — de hör inte till själva ramen.
@@ -20,8 +23,12 @@ export function buildFrame(G) {
   const group = new THREE.Group();
   const radius = G.frame.tube_radius_cm;
 
-  // Statiska ramlänkar (alla utom sadelstolpen)
+  // ── Statiska ramlänkar (sidoramslänkar, tvärbalkar, A_front→N, N→H) ──
+  // Undantag: N-H-länken (styrstolpen) ritas av handlebar.js eftersom den
+  // ska kunna rotera med styret.
   for (const [n1, n2] of G.frame.links) {
+    const isSteeringStem = (n1 === 'N' && n2 === 'H') || (n1 === 'H' && n2 === 'N');
+    if (isSteeringStem) continue;
     const p1 = G.frame.nodes[n1];
     const p2 = G.frame.nodes[n2];
     if (!p1 || !p2) continue;
@@ -29,26 +36,20 @@ export function buildFrame(G) {
     if (tube) group.add(tube);
   }
 
-  // Ramnoder som små bollar (utom Q som hör till sadelstolpen)
+  // ── Ramnoder som små bollar (utom Q som hör till sadelstolpen) ──
   for (const [name, pos] of Object.entries(G.frame.nodes)) {
     if (name === 'Q') continue;
     group.add(makeSphere(pos, radius * 1.6, NODE_COLOR));
   }
 
-  // Sadelstolpens bas — vid mittpunkten mellan A_rear_left och A_rear_right
+  // ── Sadelstolpens bas — vid mittpunkten mellan A_rear_left och A_rear_right ──
   const A_rear_left = G.frame.nodes['A_rear_left'];
   const A_rear_right = G.frame.nodes['A_rear_right'];
   const stemBase = [
     (A_rear_left[0] + A_rear_right[0]) / 2,
     (A_rear_left[1] + A_rear_right[1]) / 2,
-    0,   // centralt vid z=0
+    0,
   ];
-
-  // Korta diagonala stöd från sidoramarna upp till sadelstolpens bas.
-  // Dessa stabiliserar stolpen i z-led.
-  // (Vi använder samma noder som tvärbalken redan ligger på, så detta är
-  // egentligen två extra meshar i samma position som tvärbalken — vi
-  // hoppar över dem för att undvika dubbelritning.)
 
   let stem = null;
 

@@ -457,15 +457,20 @@ export class Mannequin {
     this._markLimbReach(this.parts.r_leg, rLegExceeded);
     this._markLimbReach(this.parts.l_leg, lLegExceeded);
     
+    // === BÅL-VRIDNING (yaw) — följer styret ===
+    // torsoYaw är vridning kring vertikalen i radianer. Positiv = samma 
+    // riktning som styrutslag (steer > 0 ⇒ torson vrids mot vänster).
+    // Sätts ihop med lean nedan via _applyTorsoLean.
+    const torsoYaw = config.torsoYaw || 0;
+    
     // === BÅL-LUTNING med automatisk justering ===
-    // Börja med given lutning, öka tills armarna når styret (eller max 70°)
     const minLean = config.torsoLean || 15;
     const maxLean = 70;
     let leanDeg = minLean;
     let rArmExceeded = true, lArmExceeded = true;
     
     while (leanDeg <= maxLean) {
-      this._applyTorsoLean(leanDeg);
+      this._applyTorsoLean(leanDeg, torsoYaw);
       // Vi måste uppdatera världs-matriserna innan IK eftersom 
       // axelpositionen ändras med bål-lutningen
       this.root.updateMatrixWorld(true);
@@ -481,11 +486,17 @@ export class Mannequin {
     this._markLimbReach(this.parts.l_arm, lArmExceeded);
   }
   
-  _applyTorsoLean(leanDeg) {
+  _applyTorsoLean(leanDeg, yawRad = 0) {
     const lean = THREE.MathUtils.degToRad(leanDeg);
+    // Framåtlutning kring x-axeln (lokal x = lateral, så rotation kring x = framåt/bakåt)
     this.parts.abdomen.rotation.x = -lean * 0.3;
     this.parts.chest.rotation.x = -lean * 0.7;
     this.parts.head.rotation.x = lean * 0.5;
+    // Vridning kring y-axeln (lokal y = upp), bröstet vrider mer än magen.
+    // Huvudet vrider lite extra för att fortsätta titta åt körriktningen.
+    this.parts.abdomen.rotation.y = yawRad * 0.1;
+    this.parts.chest.rotation.y = yawRad * 0.35;
+    this.parts.head.rotation.y = yawRad * 0.15;
   }
   
   /**
@@ -501,82 +512,72 @@ export class Mannequin {
     const legGroup = this.parts[sideName + '_leg'];
     const kneeGroup = this.parts[sideName + '_knee'];
     
-    // Hitta höftens position i world via legGroup
+    // Hämta höftens världs-position från scenens transform.
     legGroup.updateMatrixWorld(true);
     const hipPos = new THREE.Vector3();
     legGroup.getWorldPosition(hipPos);
     
-    // Vektorn från höften till foten i world
-    const target = new THREE.Vector3(...footTarget);
-    const delta = new THREE.Vector3().subVectors(target, hipPos);
-    
-    // Transformera delta till förarens lokala koord (eftersom benets rotationer 
-    // är i lokal frame). Vi tar bort root.rotation.y från delta.
-    const rootRot = this.root.rotation.y;
-    const cosR = Math.cos(-rootRot), sinR = Math.sin(-rootRot);
-    const dx_local = cosR * delta.x - sinR * delta.z;
-    const dy_local = delta.y;
-    const dz_local = sinR * delta.x + cosR * delta.z;
-    
-    // Nu har vi delta i förarens lokala frame.
-    // Bestäm vinklar: 
-    //   - "raise" = rotation.x på legGroup: positiv = lyft framåt (+z)
-    //   - "knee bend" = rotation.x på kneeGroup: positiv eller negativ?
-    // Då lokal frame har +y nedåt från legGroup (benet hänger), 
-    // och knee är vid (0, -thighLen, 0) lokalt, måste vi tänka på det.
-    
-    // Använd 2D-IK i x-y planet av lokala frame (där x här = lateral, 
-    // ignoreras; vi tar y och z för planet "framåt-uppåt").
-    // I lokal koord för benet (efter root.rotation.y kompenserats):
-    //   x_local = lateral
-    //   y_local = upp/ned
-    //   z_local = framåt/bakåt
-    // Benet vid raise=0 pekar rakt ner (negativ y från legGroup).
-    
-    // Vi gör IK i det vertikala plan som innehåller höft → fot.
-    // I detta plan är "framåt-avstånd" = dz_local och "ner-avstånd" = -dy_local
-    const horiz = dz_local;          // framåt (positiv) eller bakåt
-    const vert = -dy_local;          // nedåt (positiv) eller uppåt
-    const dist = Math.sqrt(horiz * horiz + vert * vert);
+    // Allt räknas i world. Fotens IK-mål är footTarget = [Fx, Fy, Fz].
+    const Fx = footTarget[0], Fy = footTarget[1], Fz = footTarget[2];
+    const Hx = hipPos.x, Hy = hipPos.y, Hz = hipPos.z;
     
     const L1 = D.thighLength;
     const L2 = D.shinLength;
     const maxReach = L1 + L2;
     
-    let totalReach = Math.min(dist, maxReach * 0.99);
+    // 3D-avstånd höft → fot.
+    const dx = Fx - Hx, dy = Fy - Hy, dz = Fz - Hz;
+    const dist3D = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    const totalReach = Math.min(dist3D, maxReach * 0.99);
     
-    // Vinkel höft-fot från lodlinjen (positiv = framåt)
-    const angleHipFoot = Math.atan2(horiz, vert);
+    // (A) Abduktionsvinkel: hur mycket pekar benet sidledes (mot ±z i world)?
+    // I det vertikala-laterala planet, projicerat på (z, y):
+    //   lateral = |Fz - Hz|, vertikal = Hy - Fy (positiv eftersom fot är lägre)
+    // Storlek av abduktion från lodlinjen:
+    const lateralWorld = Math.abs(Fz - Hz);
+    const vertWorld = Math.max(Hy - Fy, 0.01);  // undvik div-by-zero
+    const abductionMagnitude = Math.atan2(lateralWorld, vertWorld);
     
-    // Vinkel knäets böjning (lagen om cosinus)
-    // cosKnee = (L1² + L2² - dist²) / (2 L1 L2)
-    const cosKnee = (L1 * L1 + L2 * L2 - totalReach * totalReach) / (2 * L1 * L2);
+    // Tecken: rotation.z på legGroup måste vara positivt för 'r' (utåt mot +z)
+    // och negativt för 'l' (utåt mot -z). Detta är empiriskt verifierat
+    // för mannequinens lokala frame (där root.rotation.y = -π/2).
+    const side = sideName === 'r' ? +1 : -1;
+    const abductionAngle = side * abductionMagnitude;
+    
+    // (B) Höftens framåtlutning (rotation.x): hur mycket pekar benet framåt?
+    // Räknas i benets plan EFTER abduktion. I det planet ligger benet och
+    // höft-fot-linjen. Avståndet "rakt ner" i benets plan är:
+    //   planarDown = sqrt(lateralWorld² + vertWorld²)
+    // Avståndet "framåt" är fortfarande dx i world (eftersom föraren tittar
+    // längs world +x).
+    const planarDown = Math.sqrt(lateralWorld*lateralWorld + vertWorld*vertWorld);
+    const planarForward = dx;
+    
+    // Vinkel höft-fot från lodlinjen i benets plan (positiv = framåt mot +x)
+    const angleHipFootInPlane = Math.atan2(planarForward, planarDown);
+    
+    // (C) Knäböjning (lagen om cosinus, oberoende av frame)
+    const cosKnee = (L1*L1 + L2*L2 - totalReach*totalReach) / (2 * L1 * L2);
     const kneeAngle = Math.PI - Math.acos(Math.max(-1, Math.min(1, cosKnee)));
     
-    // Vinkel höft från sin "rätt-ner"-riktning
-    // Vinkeln mellan höft-fot-linjen och låret:
-    const cosHip = (L1 * L1 + totalReach * totalReach - L2 * L2) / 
-                   (2 * L1 * totalReach);
+    // (D) Höftens avvikelse från höft-fot-linjen i benets plan
+    const cosHip = (L1*L1 + totalReach*totalReach - L2*L2) / (2 * L1 * totalReach);
     const hipFromLine = Math.acos(Math.max(-1, Math.min(1, cosHip)));
     
-    // Höftens rotation: angleHipFoot är hela höft-fot-vinkeln från ner,
-    // höften ska vrida sig så att låret ligger längs höft-fot men 
-    // sedan minus hipFromLine för att knäet ska peka rätt håll
-    // (knäna pekar framåt i sittande, så låret behöver luta MER framåt 
-    // än rät linje till foten)
-    const hipAngle = angleHipFoot + hipFromLine;
+    const hipAngle = angleHipFootInPlane + hipFromLine;
     
-    // Applicera
+    // Applicera. Order: Z (abduktion) tippar benets plan, sedan X (framåt) 
+    // svänger benet i det tippade planet, sedan Y (vrid runt benet — nollas).
+    legGroup.rotation.order = 'ZXY';
+    legGroup.rotation.z = abductionAngle;
     legGroup.rotation.x = hipAngle;
     legGroup.rotation.y = 0;
-    legGroup.rotation.z = 0;
     
     kneeGroup.rotation.x = -kneeAngle;
     kneeGroup.rotation.y = 0;
     kneeGroup.rotation.z = 0;
     
-    // Returnera om räckvidden överskreds (verkligen, inte bara över säkerhetsmarginal)
-    return dist > (L1 + L2);
+    return dist3D > (L1 + L2);
   }
   
   /**

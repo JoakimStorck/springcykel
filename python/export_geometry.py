@@ -49,72 +49,82 @@ def export_geometry():
     data = {}
 
     # ============================================================
-    # Ramen — 3D-konstruktion med två sidoramar vid z=±SIDE_Z
+    # Ramen — 3D-konstruktion med raka sidoramar vid z=±RAM_Z
     # ============================================================
-    # Sidoramarna ligger vid z=±5. De ärver x,y från den ursprungliga
-    # platta ramen, men har varsin kopia av alla noder vid sin z.
-    # Vissa noder förblir centrala (Q, N, H — sadelstolpe och styre).
-    # Tvärbalkar binder sidoramarna samman vid axelpositionerna.
-    # B-noderna är BORTAGNA — ersätts av per-ben B-noder som hör till
-    # styrmekanismen och kan röra sig i x-led (se 'steering'-sektionen).
-    SIDE_Z = 5.0   # sidoramarnas z-position (cm)
+    # Sidoramarna är raka, båda vid z=±10. Det är *mitt på* B-axeln som går
+    # från B1 (vid z=±15, benets z1-plan) till B2 (vid z=±5, benets z2-plan).
+    # Triangelstöd och teleskop ankrar mitt på B-axeln — eliminerar
+    # vridmoment vid B-leden.
+    #
+    # Ramtopologi: centrala A_front och A_rear-noder (vid z=0) tar upp de
+    # diagonala stagen från P respektive M på båda sidor — "Y-formad" struktur
+    # sett från sidan. Tvärbalkarna A_front_left↔A_front_right och
+    # A_rear_left↔A_rear_right passerar genom respektive central nod.
+    #
+    # Föraren har 20 cm benbredd mellan sidoramarna — gott om plats.
+    RAM_Z = 10.0   # sidoramarnas z-position (cm)
 
     nodes2d = machine2d.frame.nodes
     nodes3d = {}
 
-    # Per-sida-noder: A_front, A_rear, P, M
-    side_node_names = ['A_front', 'A_rear', 'P', 'M']
-    for name in side_node_names:
+    # ── Sidorams-noder vid z=±RAM_Z (A_front, A_rear, P, M) ──
+    sidoram_node_names = ['A_front', 'A_rear', 'P', 'M']
+    for name in sidoram_node_names:
         p = nodes2d[name]
-        nodes3d[f'{name}_left']  = [float(p[0]), float(p[1]), -SIDE_Z]
-        nodes3d[f'{name}_right'] = [float(p[0]), float(p[1]), +SIDE_Z]
+        nodes3d[f'{name}_left']  = [float(p[0]), float(p[1]), -RAM_Z]
+        nodes3d[f'{name}_right'] = [float(p[0]), float(p[1]), +RAM_Z]
 
-    # Centrala noder: Q, N, H
+    # ── Centrala A-noder vid z=0 — bryts ut för att förenkla ramen ──
+    # A_front och A_rear sitter där tvärbalkarna mellan vänster och höger
+    # passerar mittlinjen. Diagonala stag från P/M på sidoramarna går till
+    # respektive central A-nod istället för till A_front_left/right.
+    nodes3d['A_front'] = [float(nodes2d['A_front'][0]),
+                          float(nodes2d['A_front'][1]), 0.0]
+    nodes3d['A_rear']  = [float(nodes2d['A_rear'][0]),
+                          float(nodes2d['A_rear'][1]),  0.0]
+
+    # ── Centrala noder: Q (sadelstolpens topp), N (styraxel), H (styre) ──
     for name in ['Q', 'N', 'H']:
         p = nodes2d[name]
         nodes3d[name] = [float(p[0]), float(p[1]), 0.0]
 
-    # Bygg länkar för varje sidoram (samma topologi som ursprungsramen,
-    # men med _left/_right-suffix och utan länkar som rör B-noderna)
-    side_link_pairs = []
-    for n1, n2, _ in machine2d.frame.links:
-        # Hoppa över länkar som involverar B_front eller B_rear — dessa
-        # blir nu styrmekanismens triangelstöd, se 'steering' nedan.
-        if 'B_front' in (n1, n2) or 'B_rear' in (n1, n2):
-            continue
-        # Hoppa över länkar som involverar Q, N, H — dessa hanteras
-        # separat som centrala stöd
-        if 'Q' in (n1, n2) or 'N' in (n1, n2) or 'H' in (n1, n2):
-            continue
-        side_link_pairs.append((n1, n2))
-
     links3d = []
-    # Sidoramslänkar (duplicerade för left och right)
-    for n1, n2 in side_link_pairs:
+
+    # ── Sidoramslänkar (per-sida) ──
+    # Bevarade per-sida-stag: A_rear↔P (vertikalt), M↔A_front (snett framåt).
+    per_side_link_pairs = [
+        ('A_rear', 'P'),
+        ('M', 'A_front'),
+    ]
+    for n1, n2 in per_side_link_pairs:
         links3d.append([f'{n1}_left',  f'{n2}_left'])
         links3d.append([f'{n1}_right', f'{n2}_right'])
 
-    # Tvärbalkar vid axelpositionerna (binder sidoramarna)
-    cross_beam_nodes = ['A_front', 'A_rear', 'P']
-    for name in cross_beam_nodes:
+    # ── Diagonala stag till central nod ──
+    # P (på sidan) → A_front (central): båda sidor möts vid central nod.
+    # M (på sidan) → A_rear (central): båda sidor möts.
+    # Central balk A_rear ↔ A_front förbinder de två centrala noderna.
+    links3d.append(['A_rear', 'A_front'])
+    links3d.append(['A_rear', 'M_left'])
+    links3d.append(['A_rear', 'M_right'])
+    links3d.append(['P_left',  'A_front'])
+    links3d.append(['P_right', 'A_front'])
+
+    # ── Tvärbalkar mellan sidorna: en per sidorams-nod ──
+    for name in sidoram_node_names:
         links3d.append([f'{name}_left', f'{name}_right'])
 
-    # Centrala stödbalkar: sadelstolpe Q ankras i båda A_rear-noderna,
-    # styraxel N→H ankras i båda A_front-noderna.
-    # Q stöttas av en bygel/tvärbalk via dynamisk sadelstolpe (i frame.js)
-    # som drar från A_rear-paret upp till bottom-av-sadeln (dynamisk längd).
-    # Här lägger vi bara strukturlänkarna som existerar oavsett sadelhöjd.
+    # ── Centrala stöd: N (styraxel) ankras från båda A_front-noderna ──
     links3d.append(['A_front_left',  'N'])
     links3d.append(['A_front_right', 'N'])
     links3d.append(['N', 'H'])
-    # Q hanteras dynamiskt i frame.js — vi listar inte länkarna till Q
-    # här eftersom de bygger sadelstolpens stativ av variabel höjd
+    # Q stöttas dynamiskt av sadelstolpen (hanteras i frame.js)
 
     data['frame'] = {
         'nodes': nodes3d,
         'links': links3d,
         'tube_radius_cm': 1.2,
-        'side_z_cm': SIDE_Z,   # sidoramarnas z-position
+        'side_z_cm': RAM_Z,    # sidoramarnas z-position
     }
 
     # ============================================================
@@ -142,12 +152,28 @@ def export_geometry():
     }
 
     # Z-konvention för axelstacken
+    # Pedalvevaxeln slutar nu vid z=±12 (utsidan av sidoramen vid z=±10
+    # + 2 cm för att vevarmen ska sitta UTANPÅ ramen). Pedaltappen sticker
+    # ut 10 cm därifrån, från z=±12 till z=±22. Lagringen sitter i
+    # sidoramen vid z=±10.
+    #
+    # Fram/bak-vevaxlarna sticker fortfarande ut till z=±15 där C-punkten
+    # ankrar på benets z1-plan. Lagringen sitter i sidoramen vid z=±10.
+    PEDAL_VEVARM_Z = 12.0      # pedalvevarmens innerkant = utsida av sidoramen + marginal
+    PEDAL_TAPP_OUTER_Z = 22.0  # pedaltappens yttre ände (= VEVARM_Z + 10 cm)
+    BEN_VEVARM_Z = Driveline.OUTER_Z  # = 15.0, för fram/bak-vevaxlarna
+
     data['drivelines_z'] = {
-        'lagerhus_half': Driveline.LAGERHUS_HALF,    # 2.0
-        'drev_z': Driveline.DREV_Z,                  # 3.0
-        'vevarm_anchor_z': Driveline.VEVARM_ANCHOR_Z,  # 5.0
-        'outer_z': Driveline.OUTER_Z,                # 15.0
-        'pedal_axle_outer_z': 5.0,  # pedalaxeln slutar precis utanför vevarm
+        'ram_z': RAM_Z,                                  # = 10.0; lagring sker här
+        'drev_z': Driveline.DREV_Z,                      # = 3.0; dreven nära mitten
+        'pedal_vevarm_z': PEDAL_VEVARM_Z,                # = 12.0
+        'pedal_tapp_outer_z': PEDAL_TAPP_OUTER_Z,        # = 22.0
+        'ben_vevarm_z': BEN_VEVARM_Z,                    # = 15.0
+        # Bakåtkompatibla namn (används än så länge i JS — avveckla senare)
+        'lagerhus_half': Driveline.LAGERHUS_HALF,
+        'vevarm_anchor_z': Driveline.VEVARM_ANCHOR_Z,
+        'outer_z': Driveline.OUTER_Z,
+        'pedal_axle_outer_z': PEDAL_VEVARM_Z,
     }
 
     # ============================================================
@@ -156,11 +182,13 @@ def export_geometry():
     data['pedal'] = {
         'crank_radius_cm': 17.0,         # vevarmens längd = pedalradien
         'arm_width_cm': 2.0,             # vevarmens bredd (radiellt tvärsnitt)
-        'arm_thickness_z_cm': Driveline.VEVARM_ANCHOR_Z - Driveline.DREV_Z,  # 2.0
-        # Pedalplattans dimensioner: bredd (x i lokal vevarm), tjocklek (y), z-utbredning
+        'arm_thickness_z_cm': 2.0,       # vevarmens tjocklek i z-led
+        # Pedaltappen sticker ut från vevarmens utsida 10 cm i z-led
         'plate_size_cm': [6.0, 2.0, 10.0],
         # Pedalplattans z-centrum (mitten av tappens utstickande del)
-        'plate_z_cm': (Driveline.VEVARM_ANCHOR_Z + Driveline.OUTER_Z) / 2,  # 10.0
+        'plate_z_cm': (PEDAL_VEVARM_Z + PEDAL_TAPP_OUTER_Z) / 2,  # = 17.0
+        # z-position där vevarmen ankrar på pedalvevaxeln (insida vevarm)
+        'vevarm_anchor_z': PEDAL_VEVARM_Z,  # = 12.0
     }
 
     # ============================================================
@@ -235,7 +263,10 @@ def export_geometry():
     MB_FRONT = 49.20   # fast längd för frambenets M→B-stöd (cm)
     AB_MAX_OFFSET = 4.0
 
-    # Pivotpositioner per sida (på sidoramarna vid z=±SIDE_Z)
+    # Pivotpositioner per sida. Med raka sidoramar vid z=±10 ligger både
+    # P-noden, M-noden, A-noden och B-noden i samma z-plan (±10). Det är
+    # *mitt på* B-axeln (som sträcker sig från B1 vid z=±15 till B2 vid z=±5)
+    # och ger momentfri infästning av styrmekanismen vid B-leden.
     P_xy = [float(nodes2d['P'][0]), float(nodes2d['P'][1])]
     M_xy = [float(nodes2d['M'][0]), float(nodes2d['M'][1])]
     A_front_xy = [float(nodes2d['A_front'][0]), float(nodes2d['A_front'][1])]
@@ -248,56 +279,60 @@ def export_geometry():
         'AB_max_offset_cm': AB_MAX_OFFSET,
         'PB_rear_cm': PB_REAR,
         'MB_front_cm': MB_FRONT,
-        'side_z_cm': SIDE_Z,
+        'side_z_cm': RAM_Z,
         # Triangelstöden — fyra per maskin (bak-vänster, bak-höger,
-        # fram-vänster, fram-höger). Varje stöd har en pivot (på sidoramen),
-        # en B-baseline-position (där B vilar vid offset 0), och en konstant
-        # längd. JS-modulen 'steering.js' beräknar B-positionen för givet
-        # offset via cirkelskärning.
+        # fram-vänster, fram-höger). Varje stöd har en pivot, en B-baseline-
+        # position (där B vilar vid offset 0), och en konstant längd.
+        # JS-modulen 'steering.js' beräknar B-positionen för givet offset
+        # via cirkelskärning. Allt ligger i z=±RAM_Z-planet.
         'supports': [
             {
                 'label': 'rear_left',
                 'pivot_name': 'P_left',
                 'pivot_xy': P_xy,
+                'pivot_z': -RAM_Z,
                 'A_xy': A_rear_xy,
                 'B_baseline_xy': B_rear_xy,
                 'support_length_cm': PB_REAR,
-                'side': 'left',     # 'left' eller 'right'
-                'position': 'rear', # 'front' eller 'rear'
-                'z': -SIDE_Z,       # B-nodens z-position (på sidoramen)
+                'side': 'left',
+                'position': 'rear',
+                'z': -RAM_Z,
             },
             {
                 'label': 'rear_right',
                 'pivot_name': 'P_right',
                 'pivot_xy': P_xy,
+                'pivot_z': +RAM_Z,
                 'A_xy': A_rear_xy,
                 'B_baseline_xy': B_rear_xy,
                 'support_length_cm': PB_REAR,
                 'side': 'right',
                 'position': 'rear',
-                'z': +SIDE_Z,
+                'z': +RAM_Z,
             },
             {
                 'label': 'front_left',
                 'pivot_name': 'M_left',
                 'pivot_xy': M_xy,
+                'pivot_z': -RAM_Z,
                 'A_xy': A_front_xy,
                 'B_baseline_xy': B_front_xy,
                 'support_length_cm': MB_FRONT,
                 'side': 'left',
                 'position': 'front',
-                'z': -SIDE_Z,
+                'z': -RAM_Z,
             },
             {
                 'label': 'front_right',
                 'pivot_name': 'M_right',
                 'pivot_xy': M_xy,
+                'pivot_z': +RAM_Z,
                 'A_xy': A_front_xy,
                 'B_baseline_xy': B_front_xy,
                 'support_length_cm': MB_FRONT,
                 'side': 'right',
                 'position': 'front',
-                'z': +SIDE_Z,
+                'z': +RAM_Z,
             },
         ],
         # UI-slider för styrutslag: -1 (full högersväng) till +1 (full

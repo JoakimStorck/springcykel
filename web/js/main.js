@@ -52,7 +52,7 @@ async function main() {
   const G = await loadGeometry();
 
   // ── Scen ───────────────────────────────────────────────────
-  const { scene, camera, renderer, controls } = createScene();
+  const { scene, camera, renderer, controls, gridHelper } = createScene();
 
   // ── State ──────────────────────────────────────────────────
   let currentHeight = G.rider.default_height_cm;
@@ -87,13 +87,13 @@ async function main() {
   // ── Driveline, ben, styre ──────────────────────────────────
   const driveline = buildDriveline(scene, G);
   const legs = buildLegs(scene, G, steering);
-  buildHandlebar(scene, G);
+  const handlebar = buildHandlebar(scene, G);
 
   // ── Styrmekanismens visualisering ─────────────────────────
   const steeringRender = buildSteeringRender(scene, G, steering);
 
   // ── Förare ─────────────────────────────────────────────────
-  const rider = createRiderController(scene, G, () => currentSaddleTopAt);
+  const rider = createRiderController(scene, G, () => currentSaddleTopAt, handlebar);
 
   // Auto-anpassa sadelhöjd till default-föraren INNAN vi skapar honom
   currentSittHeight = rider.autoSaddleHeight(currentHeight);
@@ -115,15 +115,21 @@ async function main() {
 
   // ── Animator ───────────────────────────────────────────────
   const animator = createAnimator({
-    scene, camera, renderer, controls, G,
+    scene, camera, renderer, controls, G, gridHelper, steering,
     updateLegs: legs.updateLegs,
     updatePedalCranks: driveline.updatePedalCranks,
     updateRiderPose: (theta) => rider.updatePose(theta),
   });
 
-  // När styret ändras: uppdatera benen direkt (även om animationen är pausad)
+  // När styret ändras: uppdatera benen och styrets vinkel direkt
+  // (även om animationen är pausad). Max styrvinkel: 60° vid steer = ±1.
+  const MAX_STEER_DEG = 60;
   steering.onChange(() => {
+    const steerVal = steering.getSteer();  // -1..+1
+    const steerRad = steerVal * MAX_STEER_DEG * Math.PI / 180;
+    handlebar.setSteerAngle(steerRad);
     legs.updateLegs(animator.getTheta());
+    rider.updatePose(animator.getTheta());
   });
 
   // ── UI ─────────────────────────────────────────────────────

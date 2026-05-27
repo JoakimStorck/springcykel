@@ -23,7 +23,7 @@ import { Mannequin } from './mannequin.js';
  *                     när sadelhöjden ändras). En getter eftersom sadelns
  *                     topAt-funktion byts ut när sadelhöjden ändras.
  */
-export function createRiderController(scene, G, getSaddleTop) {
+export function createRiderController(scene, G, getSaddleTop, handlebar) {
   const E = G.ergonomy;
   let current = null;          // { man, updateRiderPose, riderX, saddleTopAtRider, pelvisHalf }
   let currentTheta = 0;        // senast använt theta (för att kunna re-posa)
@@ -46,6 +46,12 @@ export function createRiderController(scene, G, getSaddleTop) {
   }
 
   function handlebarPos(side) {
+    // Använd handlebar.gripWorld om tillgängligt (följer styrets rotation),
+    // annars statiskt fallback.
+    if (handlebar && handlebar.gripWorld) {
+      const grip = handlebar.gripWorld(side);
+      return [grip[0], grip[1] + E.hand_above_handlebar_cm, grip[2]];
+    }
     return [
       G.handlebar.center[0],
       G.handlebar.center[1] + E.hand_above_handlebar_cm,
@@ -121,6 +127,12 @@ export function createRiderController(scene, G, getSaddleTop) {
 
       function updateRiderPose(theta_global) {
         currentTheta = theta_global;
+        // Torsovridning följer styret. Hämta aktuell styrvinkel från
+        // handlebar (om tillgängligt) och passera vidare. Mannequinen
+        // applicerar fördelningen mellan abdomen, chest och head internt.
+        const steerRad = (handlebar && handlebar.getSteerAngle)
+          ? handlebar.getSteerAngle()
+          : 0;
         man.poseRidingMachine({
           pedalLeft: pedalPos(theta_global, -1, height),
           pedalRight: pedalPos(theta_global, +1, height),
@@ -128,6 +140,7 @@ export function createRiderController(scene, G, getSaddleTop) {
           handlebarRight: handlebarPos(+1),
           hipWorld: [riderX, saddleTopAtRider + pelvisHalf, 0],
           torsoLean: E.torso_lean_deg,
+          torsoYaw: steerRad,
         });
       }
 

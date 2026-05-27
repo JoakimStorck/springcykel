@@ -40,9 +40,9 @@ export function createScene() {
   controls.dampingFactor = 0.08;
 
   addLights(scene);
-  addGround(scene);
+  const gridHelper = addGround(scene);
 
-  return { scene, camera, renderer, controls };
+  return { scene, camera, renderer, controls, gridHelper };
 }
 
 function addLights(scene) {
@@ -78,8 +78,11 @@ function addGround(scene) {
   ground.receiveShadow = true;
   scene.add(ground);
 
+  // GridHelper med 40 divisions över 400 cm = 10 cm rutor.
+  // Returneras så animationen kan skifta den för framdriftsillusion.
   const gridHelper = new THREE.GridHelper(400, 40, 0xaaaaaa, 0xbbbbbb);
   gridHelper.material.opacity = 0.5;
   gridHelper.material.transparent = true;
   scene.add(gridHelper);
+  return gridHelper;
 }

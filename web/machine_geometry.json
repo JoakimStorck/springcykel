@@ -4,42 +4,52 @@
       "A_front_left": [
         50.0,
         91.83,
-        -5.0
+        -10.0
       ],
       "A_front_right": [
         50.0,
         91.83,
-        5.0
+        10.0
+      ],
+      "A_front": [
+        50.0,
+        91.83,
+        0.0
       ],
       "A_rear_left": [
         0.0,
         91.83,
-        -5.0
+        -10.0
       ],
       "A_rear_right": [
         0.0,
         91.83,
-        5.0
+        10.0
+      ],
+      "A_rear": [
+        0.0,
+        91.83,
+        0.0
       ],
       "P_left": [
         0.0,
         50.0,
-        -5.0
+        -10.0
       ],
       "P_right": [
         0.0,
         50.0,
-        5.0
+        10.0
       ],
       "M_left": [
         44.0,
         62.015,
-        -5.0
+        -10.0
       ],
       "M_right": [
         44.0,
         62.015,
-        5.0
+        10.0
       ],
       "Q": [
         0.0,
@@ -59,36 +69,40 @@
     },
     "links": [
       [
-        "P_left",
-        "A_rear_left"
-      ],
-      [
-        "P_right",
-        "A_rear_right"
-      ],
-      [
         "A_rear_left",
-        "A_front_left"
+        "P_left"
       ],
       [
         "A_rear_right",
-        "A_front_right"
+        "P_right"
+      ],
+      [
+        "A_rear",
+        "A_front"
+      ],
+      [
+        "A_rear",
+        "M_left"
+      ],
+      [
+        "A_rear",
+        "M_right"
       ],
       [
         "P_left",
-        "M_left"
+        "A_front"
       ],
       [
         "P_right",
-        "M_right"
+        "A_front"
       ],
       [
-        "A_front_left",
-        "M_left"
+        "M_left",
+        "A_front_left"
       ],
       [
-        "A_front_right",
-        "M_right"
+        "M_right",
+        "A_front_right"
       ],
       [
         "A_front_left",
@@ -101,6 +115,10 @@
       [
         "P_left",
         "P_right"
+      ],
+      [
+        "M_left",
+        "M_right"
       ],
       [
         "A_front_left",
@@ -116,7 +134,7 @@
       ]
     ],
     "tube_radius_cm": 1.2,
-    "side_z_cm": 5.0
+    "side_z_cm": 10.0
   },
   "axles": {
     "pedal": {
@@ -148,11 +166,15 @@
     }
   },
   "drivelines_z": {
-    "lagerhus_half": 2.0,
+    "ram_z": 10.0,
     "drev_z": 3.0,
+    "pedal_vevarm_z": 12.0,
+    "pedal_tapp_outer_z": 22.0,
+    "ben_vevarm_z": 15.0,
+    "lagerhus_half": 2.0,
     "vevarm_anchor_z": 5.0,
     "outer_z": 15.0,
-    "pedal_axle_outer_z": 5.0
+    "pedal_axle_outer_z": 12.0
   },
   "pedal": {
     "crank_radius_cm": 17.0,
@@ -163,7 +185,8 @@
       2.0,
       10.0
     ],
-    "plate_z_cm": 10.0
+    "plate_z_cm": 17.0,
+    "vevarm_anchor_z": 12.0
   },
   "leg": {
     "constants": {
@@ -353,7 +376,7 @@
     "AB_max_offset_cm": 4.0,
     "PB_rear_cm": 51.01,
     "MB_front_cm": 49.2,
-    "side_z_cm": 5.0,
+    "side_z_cm": 10.0,
     "supports": [
       {
         "label": "rear_left",
@@ -362,6 +385,7 @@
           0.0,
           50.0
         ],
+        "pivot_z": -10.0,
         "A_xy": [
           0.0,
           91.83
@@ -373,7 +397,7 @@
         "support_length_cm": 51.01,
         "side": "left",
         "position": "rear",
-        "z": -5.0
+        "z": -10.0
       },
       {
         "label": "rear_right",
@@ -382,6 +406,7 @@
           0.0,
           50.0
         ],
+        "pivot_z": 10.0,
         "A_xy": [
           0.0,
           91.83
@@ -393,7 +418,7 @@
         "support_length_cm": 51.01,
         "side": "right",
         "position": "rear",
-        "z": 5.0
+        "z": 10.0
       },
       {
         "label": "front_left",
@@ -402,6 +427,7 @@
           44.0,
           62.015
         ],
+        "pivot_z": -10.0,
         "A_xy": [
           50.0,
           91.83
@@ -413,7 +439,7 @@
         "support_length_cm": 49.2,
         "side": "left",
         "position": "front",
-        "z": -5.0
+        "z": -10.0
       },
       {
         "label": "front_right",
@@ -422,6 +448,7 @@
           44.0,
           62.015
         ],
+        "pivot_z": 10.0,
         "A_xy": [
           50.0,
           91.83
@@ -433,7 +460,7 @@
         "support_length_cm": 49.2,
         "side": "right",
         "position": "front",
-        "z": 5.0
+        "z": 10.0
       }
     ],
     "steer_range": [
@@ -491,7 +518,6 @@
       45.0
     ],
     "pedal_radius": 17.0,
-    "foot_track_z": 10.0,
     "hand_track_z": 20.0,
     "hip_width": 35,
     "shoulder_width": 45,
